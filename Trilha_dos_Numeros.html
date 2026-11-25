@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trilha dos Números</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* VOICE: alegre, de sala de aula infantil, contas com objetos para contar
+   IDEA: a mesma trilha de tabuleiro do jogo de Português, agora com números
+   PICTURE: o mapa da trilha com paradas grandes; depois, o cartão do jogo
+   COLOUR and TYPE: rosa (ou azul) chapado, Fredoka arredondada + Nunito
+   LAYOUT: título curto, trilha logo abaixo; no jogo, uma coluna calma */
+:root{color-scheme:light dark;
+--bg:light-dark(#FFF4F8,#241019);--card:light-dark(#FFFFFF,#331826);--soft:light-dark(#FFE4EE,#4A2034);
+--line:light-dark(#F4A6C4,#7A3A58);--p:light-dark(#D63A74,#FF7EAE);--p2:light-dark(#B8235A,#FFB3CF);
+--ink:light-dark(#3A1F2B,#FCE9F1);--mute:light-dark(#6B3A50,#E3B9CB);--onp:light-dark(#FFFFFF,#2A0F1C);
+--ok:light-dark(#1E7F4B,#6BE0A4);--okbg:light-dark(#E2F6EA,#163A28);--bad:light-dark(#C2391F,#FF8F78);--badbg:light-dark(#FDE6E0,#3E1E18)}
+:root.azul{--bg:light-dark(#F2F8FF,#0F1A2A);--card:light-dark(#FFFFFF,#16263D);--soft:light-dark(#E3F0FF,#1F3656);
+--line:light-dark(#9CC3F0,#3A5F8E);--p:light-dark(#2F7DDB,#7DB6FF);--p2:light-dark(#1F5FAD,#B9D8FF);
+--ink:light-dark(#1B2A3D,#E8F1FF);--mute:light-dark(#3D5A80,#AFC6E4);--onp:light-dark(#FFFFFF,#0B1626)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Nunito,'Trebuchet MS',sans-serif;font-weight:700;overflow-x:clip}
+.fd{font-family:Fredoka,'Trebuchet MS',sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--p2);outline-offset:3px}
+.wrap{max-width:980px;margin:0 auto;padding:clamp(18px,3vw,36px) max(4vw,14px) 48px}
+.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;border-bottom:3px dotted var(--line);padding-bottom:14px;margin-bottom:22px}
+h1{margin:0;font:700 clamp(30px,5vw,46px)/1.05 Fredoka,sans-serif;color:var(--p2);text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--mute)}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap}
+.pill{min-height:44px;padding:0 16px;border-radius:999px;background:var(--card);border:2px solid var(--line);font-family:Fredoka,sans-serif;font-weight:600;font-size:16px;color:var(--p2)}
+.pill[aria-pressed=true]{background:var(--p);border-color:var(--p);color:var(--onp)}
+.trilha{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px;counter-reset:n}
+.parada{position:relative;text-align:left;display:grid;grid-template-columns:76px minmax(0,1fr);gap:4px 14px;align-items:center;padding:16px 16px 16px 14px;min-height:118px;border-radius:26px;background:var(--card);border:3px dashed var(--line);box-shadow:0 6px 0 var(--soft);transition:transform .15s}
+.parada:hover{transform:translateY(-3px)}
+.parada .ico{grid-row:span 3;width:76px;height:76px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:700 34px/1 Fredoka,sans-serif;color:var(--p2)}
+.parada .nm{font:700 23px/1.1 Fredoka,sans-serif;color:var(--p2)}
+.parada .ds{font-size:15px;color:var(--mute);line-height:1.3}
+.estrelas{font-size:20px;letter-spacing:2px;color:var(--p)}
+.estrelas .off{color:var(--line)}
+.parada.mista{border-style:solid;background:var(--soft)}
+.parada.mista .ico{background:var(--p);color:var(--onp)}
+.cheia{background:var(--p);border-color:var(--p);color:var(--onp)}
+.aviso{margin:-8px 0 18px;padding:12px 16px;border-radius:16px;background:var(--soft);color:var(--mute);font-size:15px}
+:fullscreen{background:var(--bg);overflow-y:auto}
+:fullscreen .wrap{padding-top:clamp(18px,3vw,36px)}
+.dica-geral{margin-top:22px;font-size:15px;color:var(--mute)}
+/* jogo */
+.barra{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.voltar{min-height:44px;padding:0 14px;border-radius:999px;background:var(--card);border:2px solid var(--line);font-family:Fredoka,sans-serif;font-weight:600;color:var(--p2);flex:none}
+.prog{flex:1;height:16px;border-radius:99px;background:var(--soft);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--p);border-radius:99px;transition:width .4s}
+.pts{flex:none;font:700 20px Fredoka,sans-serif;color:var(--p2)}
+.cartao{background:var(--card);border:3px solid var(--line);border-radius:30px;padding:clamp(18px,3.5vw,34px);box-shadow:0 8px 0 var(--soft)}
+.cab{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font:600 15px Fredoka,sans-serif;color:var(--onp);background:var(--p);border-radius:999px;padding:4px 14px}
+.ouvir{min-height:44px;padding:0 14px;border-radius:999px;background:var(--soft);font:600 16px Fredoka,sans-serif;color:var(--p2);display:inline-flex;align-items:center;gap:6px}
+.perg{margin:16px 0 18px;font:700 clamp(23px,3.6vw,32px)/1.2 Fredoka,sans-serif;color:var(--ink);text-wrap:balance}
+.texto{background:var(--soft);border-radius:20px;padding:16px 20px;margin-bottom:18px;font-size:18px;line-height:1.55}
+.texto .tt{font:700 21px Fredoka,sans-serif;color:var(--p2)}
+.texto .hl{background:var(--p);color:var(--onp);border-radius:8px;padding:1px 8px;box-decoration-break:clone}
+.texto .dir{text-align:right}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.op{min-height:64px;padding:12px 16px;border-radius:20px;background:var(--bg);border:3px solid var(--line);font:600 19px/1.25 Fredoka,sans-serif;color:var(--ink);text-align:center}
+.op:hover:not(:disabled){border-color:var(--p)}
+.op.big{font-size:40px;min-height:96px}
+.op.ok,.letra.ok,.ficha.ok{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.op.bad,.letra.bad,.ficha.bad{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.op:disabled{cursor:default}
+.palavra{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;font:700 clamp(44px,9vw,72px)/1 Fredoka,sans-serif;letter-spacing:3px;margin:6px 0 24px;color:var(--ink)}
+.buraco{display:inline-grid;place-items:center;min-width:1.2em;height:1.25em;border:4px solid var(--p);border-radius:16px;background:var(--bg);color:var(--p2)}
+.letras{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px}
+.letra{width:clamp(56px,13vw,84px);height:clamp(70px,15vw,100px);border-radius:20px;background:var(--bg);border:3px solid var(--line);font:700 clamp(36px,8vw,56px) Fredoka,sans-serif;color:var(--ink)}
+.letra:hover:not(:disabled){border-color:var(--p)}
+.slots,.pool{display:flex;flex-direction:column;gap:10px}
+.slots{min-height:60px;padding:12px;border:3px dashed var(--line);border-radius:22px;margin-bottom:14px;counter-reset:s}
+.slots:empty::before{content:'Toque nas frases abaixo na ordem certa';color:var(--mute);font-size:15px;padding:6px}
+.ficha{display:flex;align-items:center;gap:12px;min-height:54px;padding:8px 14px;border-radius:16px;background:var(--bg);border:3px solid var(--line);font:600 18px/1.25 Fredoka,sans-serif;text-align:left;color:var(--ink)}
+.slots .ficha{background:var(--soft);border-color:var(--p)}
+.slots .ficha::before{counter-increment:s;content:counter(s);flex:none;width:30px;height:30px;border-radius:50%;background:var(--p);color:var(--onp);display:grid;place-items:center;font-size:16px}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+.grade .ficha{justify-content:center;min-height:62px;font-size:21px}
+.grade .ficha[aria-pressed=true]{background:var(--p);border-color:var(--p);color:var(--onp)}
+.conferir{display:block;margin:18px auto 0;min-height:56px;padding:0 34px;border-radius:999px;background:var(--p);color:var(--onp);font:700 21px Fredoka,sans-serif;box-shadow:0 5px 0 var(--p2)}
+.conferir:disabled{opacity:.45;cursor:default}
+.fb{margin-top:22px;display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:center;padding:14px 16px;border-radius:22px}
+.fb:empty{display:none}
+.fb.ok{background:var(--okbg)}.fb.bad{background:var(--badbg)}
+.fb b{display:block;font:700 23px Fredoka,sans-serif}
+.fb.ok b{color:var(--ok)}.fb.bad b{color:var(--bad)}
+.fb .prox{grid-column:1/-1;justify-self:end;min-height:52px;padding:0 26px;border-radius:999px;background:var(--p);color:var(--onp);font:700 19px Fredoka,sans-serif}
+.dica{margin-top:14px;font-size:15px;color:var(--mute);text-align:center}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.fim{text-align:center;position:relative;overflow:hidden}
+.fim .grande{font-size:clamp(54px,12vw,84px);letter-spacing:6px;color:var(--p);line-height:1}
+.fim .grande .off{color:var(--line)}
+.fim h2{font:700 clamp(28px,5vw,40px)/1.1 Fredoka,sans-serif;color:var(--p2);margin:14px 0 6px}
+.fim .acoes{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.confete{position:absolute;top:-20px;width:12px;height:18px;border-radius:3px;animation:cai 2.6s ease-in forwards}
+@keyframes cai{to{transform:translateY(560px) rotate(540deg);opacity:0}}
+.conta{font-size:clamp(30px,6vw,50px)!important;letter-spacing:1px!important}
+.op.n{font-size:32px}
+.vis{background:var(--soft);border-radius:22px;padding:16px;margin-bottom:18px;display:flex;justify-content:center}
+.grupos{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.prato,.monte{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-content:center;min-width:84px;min-height:72px;max-width:136px;padding:12px 14px;border-radius:999px;background:var(--card);border:3px solid var(--line)}
+.monte{max-width:340px;border-radius:24px}
+.prato.pacote{border-radius:14px;border-style:dashed;border-color:var(--p)}
+.it{display:inline-block;width:30px;height:30px;flex:none}.it svg{width:100%;height:100%;display:block}
+.arranjo{display:grid;gap:8px;padding:12px;border-radius:16px;background:var(--card);border:3px solid var(--line)}
+.maquina{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;font:700 40px Fredoka,sans-serif}
+.maquina .num{min-width:84px;height:84px;padding:0 10px;border-radius:20px;background:var(--card);border:3px solid var(--line);display:grid;place-items:center;color:var(--ink)}
+.maquina .sai.pronto{border-color:var(--p);color:var(--p2);animation:pop .4s}
+.maquina .cx{padding:18px 22px;border-radius:22px;background:var(--p);color:var(--onp);font-size:24px;box-shadow:0 6px 0 var(--p2)}
+.maquina .seta{color:var(--p2)}
+@keyframes pop{50%{transform:scale(1.2)}}
+.sobra{background:var(--soft);border-radius:20px;padding:12px;margin-bottom:14px;text-align:center}
+.sobra .rot{font-size:16px;color:var(--mute);margin-bottom:6px}.sobra .rot b{font:700 22px Fredoka,sans-serif;color:var(--p2)}
+.sobra .itens{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;min-height:34px}
+.pratos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px}
+.pratoBtn{min-height:150px;border-radius:28px;border:3px dashed var(--p);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px;gap:6px}
+.pratoBtn:hover:not(:disabled){background:var(--soft)}
+.pratoBtn .itens{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.pratoBtn .cnt{font:700 28px Fredoka,sans-serif;color:var(--p2)}
+.pratoBtn.ok{border-style:solid;border-color:var(--ok);background:var(--okbg)}.pratoBtn.bad{border-style:solid;border-color:var(--bad);background:var(--badbg)}
+.linha-acoes{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:16px}.linha-acoes .conferir{margin:0}
+.combo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.colc{display:flex;flex-direction:column;gap:8px}
+.colc h3{margin:0;font:700 18px Fredoka,sans-serif;color:var(--mute);text-align:center}
+.peca{min-height:54px;padding:6px 10px;border-radius:16px;border:3px solid var(--line);background:var(--bg);font:600 18px/1.2 Fredoka,sans-serif;color:var(--ink)}
+.peca[aria-pressed=true]{background:var(--p);border-color:var(--p);color:var(--onp)}
+.msg{text-align:center;color:var(--mute);margin:14px 0 0}.msg b{font:700 22px Fredoka,sans-serif;color:var(--p2)}
+.achados{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;justify-content:center;min-height:10px}
+.achado{padding:6px 12px;border-radius:999px;background:var(--soft);border:2px solid var(--line);font:600 15px Fredoka,sans-serif;animation:pop .3s}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:600px){.parada{grid-template-columns:62px minmax(0,1fr)}.parada .ico{width:62px;height:62px;font-size:28px}.barra{flex-wrap:wrap}.prog{order:3;flex-basis:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Trilha dos Números</h1>
+      <p class="sub">Multiplicar, dobrar, repartir e combinar. Escolha uma parada!</p>
+    </div>
+    <div class="ctrl">
+      <button class="pill" id="cor" aria-label="Trocar a cor do jogo">Cor: rosa</button>
+      <button class="pill" id="som" aria-pressed="true">Som ligado</button>
+      <button class="pill cheia" id="cheia">Tela cheia</button>
+    </div>
+  </header>
+  <p class="aviso" id="aviso" hidden></p>
+  <main id="app" aria-live="polite"></main>
+</div>
+<script>
+{
+const STAR='<svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z" fill="currentColor"/></svg>';
+const ICO={
+ parcelas:'<span style="font-size:24px">2+2</span>',
+ fileiras:'<svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="7" r="2.4"/><circle cx="12" cy="7" r="2.4"/><circle cx="19" cy="7" r="2.4"/><circle cx="5" cy="17" r="2.4"/><circle cx="12" cy="17" r="2.4"/><circle cx="19" cy="17" r="2.4"/></g></svg>',
+ combina:'<svg width="46" height="46" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3c-.5 1.5-2 2.5-4 2.5S8.5 4.5 8 3z" fill="currentColor"/></svg>',
+ dobro:'×2', metade:'½',
+ problemas:'<svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true"><circle cx="27" cy="27" r="18" fill="none" stroke="currentColor" stroke-width="6"/><path d="M41 41l14 14" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></svg>',
+ mista:STAR
+};
+const MASCOTE='<svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="27" cy="27" r="21" fill="var(--card)" stroke="var(--p)" stroke-width="5"/><path d="M42 42l15 15" stroke="var(--p2)" stroke-width="8" stroke-linecap="round"/><circle cx="20" cy="24" r="3.2" fill="var(--ink)"/><circle cx="34" cy="24" r="3.2" fill="var(--ink)"/><path d="M18 32q9 8 18 0" fill="none" stroke="var(--ink)" stroke-width="3.2" stroke-linecap="round"/></svg>';
+const IT={
+ morango:'<svg viewBox="0 0 24 24"><path d="M12 22c-5-3-8.5-7.5-7.5-11.5C5.3 7.6 8.4 7 12 8c3.6-1 6.7-.4 7.5 2.5 1 4-2.5 8.5-7.5 11.5z" fill="#E5484D"/><path d="M8 4.5l4 3.5 4-3.5" stroke="#2E9E5B" stroke-width="2.6" fill="none" stroke-linecap="round"/><g fill="#FFE08A"><circle cx="10" cy="13" r=".9"/><circle cx="14" cy="12" r=".9"/><circle cx="12" cy="16" r=".9"/></g></svg>',
+ bala:'<svg viewBox="0 0 24 24"><path d="M6 12L1.5 7.5v9zM18 12l4.5-4.5v9z" fill="#F7A8C8"/><circle cx="12" cy="12" r="6.5" fill="#E8457E"/><path d="M8.5 9.5q3.5 2.5 7 0" stroke="#fff" stroke-width="1.6" fill="none" opacity=".7"/></svg>',
+ flor:'<svg viewBox="0 0 24 24"><g fill="#F59E0B"><circle cx="12" cy="5.5" r="4"/><circle cx="18.2" cy="10" r="4"/><circle cx="15.8" cy="17.4" r="4"/><circle cx="8.2" cy="17.4" r="4"/><circle cx="5.8" cy="10" r="4"/></g><circle cx="12" cy="12" r="3.4" fill="#8B4513"/></svg>',
+ bola:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#3B82F6"/><path d="M2.6 12h18.8M12 2.5v19" stroke="#fff" stroke-width="1.8"/></svg>',
+ estrela:'<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z" fill="#F7C948" stroke="#D9A21B" stroke-width="1"/></svg>',
+ biscoito:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#D9A066"/><g fill="#6B3E1F"><circle cx="8.5" cy="9" r="1.4"/><circle cx="15" cy="8.5" r="1.3"/><circle cx="12" cy="13" r="1.4"/><circle cx="8" cy="15.5" r="1.2"/><circle cx="16" cy="15" r="1.4"/></g></svg>'
+};
+const NOME={morango:'morangos',bala:'balas',flor:'flores',bola:'bolinhas',estrela:'estrelinhas',biscoito:'biscoitos'};
+const KS=Object.keys(IT);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1)), pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const ic=(k,n)=>Array.from({length:n},()=>`<span class="it">${IT[k]}</span>`).join('');
+const grupos=(n,m,k,cl='')=>`<div class="vis"><div class="grupos">${Array.from({length:n},()=>`<div class="prato ${cl}">${ic(k,m)}</div>`).join('')}</div></div>`;
+const arranjo=(r,c,k)=>`<div class="vis"><div class="arranjo" style="grid-template-columns:repeat(${c},auto)">${ic(k,r*c)}</div></div>`;
+const solto=(k,n)=>`<div class="vis"><div class="grupos"><div class="monte">${ic(k,n)}</div></div></div>`;
+const maquina=(lbl,n)=>`<div class="vis"><div class="maquina"><div class="num">${n}</div><div class="seta" aria-hidden="true">→</div><div class="cx">${lbl}</div><div class="seta" aria-hidden="true">→</div><div class="num sai" id="sai">?</div></div></div>`;
+function nums(ans,extra=[]){const s=new Set([ans]);for(const e of extra)if(e>0&&e!==ans&&s.size<4)s.add(e);let d=1;while(s.size<4){if(ans+d>0)s.add(ans+d);if(s.size<4&&ans-d>0)s.add(ans-d);d++}return [...s].map(String)}
+const soma=(n,m)=>Array(n).fill(m).join(' + ');
+
+const GER={
+parcelas:()=>{const L=[];
+ for(let i=0;i<3;i++){const m=pick([2,3]),n=rnd(2,5),k=pick(KS),t=n*m;
+  L.push({t:'choice',q:`São ${n} pratinhos com ${m} ${NOME[k]} em cada. Quantos ${NOME[k]} ao todo?`,vis:grupos(n,m,k),o:nums(t,[n+m]),a:0,ex:`${soma(n,m)} = ${t}. É o mesmo que ${n} × ${m} = ${t}.`})}
+ for(let i=0;i<2;i++){const m=pick([2,3,4,5]),n=rnd(3,5);
+  L.push({t:'choice',q:'Como escrever esta soma usando o sinal de vezes?',big:soma(n,m),o:[`${n} × ${m}`,`${m} × ${m}`,`${n} + ${m}`],a:0,ex:`São ${n} parcelas iguais a ${m}. Então ${n} × ${m} = ${n*m}.`})}
+ {const m=pick([2,3]),n=rnd(3,5);L.push({t:'choice',q:`Qual soma é igual a ${n} × ${m}?`,o:[soma(n,m),`${n} + ${m}`,soma(n+1,m)],a:0,ex:`${n} × ${m} quer dizer ${n} vezes o número ${m}: ${soma(n,m)} = ${n*m}.`})}
+ {const n=rnd(3,6);L.push({t:'choice',q:`Cada bicicleta tem 2 rodas. Quantas rodas têm ${n} bicicletas?`,vis:grupos(n,2,'bola'),o:nums(2*n,[n+2]),a:0,ex:`${soma(n,2)} = ${2*n}. Ou ${n} × 2 = ${2*n}.`})}
+ {const n=rnd(2,5);L.push({t:'choice',q:`Cada triciclo tem 3 rodas. Quantas rodas têm ${n} triciclos?`,vis:grupos(n,3,'bola'),o:nums(3*n,[n+3]),a:0,ex:`${soma(n,3)} = ${3*n}. Ou ${n} × 3 = ${3*n}.`})}
+ return shuf(L)},
+fileiras:()=>{const L=[];
+ for(let i=0;i<3;i++){const r=rnd(2,5),c=pick([4,5]),k=pick(['bala','biscoito','flor']);
+  L.push({t:'choice',q:`Na caixa há ${r} fileiras com ${c} ${NOME[k]} em cada. Quantos ${NOME[k]} ao todo?`,vis:arranjo(r,c,k),o:nums(r*c,[r+c]),a:0,ex:`${r} fileiras de ${c}: ${r} × ${c} = ${r*c}.`})}
+ {const r=rnd(2,4),c=pick([4,5]);L.push({t:'choice',q:'Qual conta mostra quantas estrelinhas há no quadro?',vis:arranjo(r,c,'estrela'),o:[`${r} × ${c}`,`${r} + ${c}`,`${c} + ${c}`],a:0,ex:`São ${r} fileiras com ${c} em cada: ${r} × ${c} = ${r*c}.`})}
+ for(let i=0;i<2;i++){const p=rnd(2,5),per=pick([4,5]);
+  L.push({t:'choice',q:`1 pacotinho tem ${per} figurinhas. Quantas figurinhas há em ${p} pacotinhos?`,vis:grupos(p,per,'estrela','pacote'),o:nums(p*per,[p+per]),a:0,ex:`Cada pacotinho tem ${per}. ${p} pacotinhos: ${p} × ${per} = ${p*per}.`})}
+ {const n=rnd(2,4);L.push({t:'choice',q:`Cada mão tem 5 dedos. Quantos dedos têm ${n} mãos?`,o:nums(5*n,[n+5]),a:0,ex:`${soma(n,5)} = ${5*n}. Ou ${n} × 5 = ${5*n}.`})}
+ {const n=rnd(2,5);L.push({t:'choice',q:`Cada carrinho tem 4 rodas. Quantas rodas têm ${n} carrinhos?`,vis:grupos(n,4,'bola'),o:nums(4*n,[n+4]),a:0,ex:`${soma(n,4)} = ${4*n}. Ou ${n} × 4 = ${4*n}.`})}
+ return shuf(L)},
+combina:()=>{const L=[];
+ const sets=[[['Blusa rosa','Blusa lilás'],['Saia azul','Saia branca','Saia xadrez'],'blusas','saias','looks'],
+  [['Sorvete de morango','Sorvete de chocolate'],['Granulado','Calda','Confete'],'sabores','coberturas','sorvetes'],
+  [['Camiseta azul','Camiseta verde','Camiseta amarela'],['Bermuda preta','Bermuda jeans'],'camisetas','bermudas','roupas'],
+  [['Pão francês','Pão de forma'],['Queijo','Presunto'],'pães','recheios','lanches']];
+ shuf(sets).slice(0,2).forEach(([A,B,na,nb,nt])=>L.push({t:'combina',A,B,na,nb,nt,q:`Monte todos os ${nt} diferentes! Toque em um item de cada lado.`}));
+ const ctx=[['blusas','saias','looks'],['sabores de sorvete','coberturas','sorvetes'],['pães','recheios','lanches'],['camisetas','bermudas','roupas'],['tiaras','laços','penteados']];
+ shuf(ctx).slice(0,4).forEach(([x,y,z])=>{const a=rnd(2,3),b=rnd(2,4);
+  L.push({t:'choice',q:`Tenho ${a} ${x} e ${b} ${y}. Quantos ${z} diferentes posso montar?`,o:nums(a*b,[a+b]),a:0,ex:`Cada um dos ${a} ${x} combina com ${b} ${y}: ${a} × ${b} = ${a*b}.`})});
+ return L},
+dobro:()=>{const L=[];
+ for(let i=0;i<3;i++){const n=rnd(2,10);L.push({t:'choice',q:'Na máquina do dobro, o que sai?',vis:maquina('DOBRO',n),sai:2*n,o:nums(2*n,[n+1]),a:0,ex:`O dobro de ${n} é ${n} + ${n} = ${2*n}.`})}
+ for(let i=0;i<2;i++){const n=rnd(2,6);L.push({t:'choice',q:'Na máquina do triplo, o que sai?',vis:maquina('TRIPLO',n),sai:3*n,o:nums(3*n,[2*n]),a:0,ex:`O triplo de ${n} é ${n} + ${n} + ${n} = ${3*n}.`})}
+ {const x=rnd(2,4);L.push({t:'choice',q:`A receita de bolo usa ${x} ovos. Para fazer o dobro da receita, quantos ovos vamos usar?`,o:nums(2*x,[x+1]),a:0,ex:`O dobro de ${x} é ${x} + ${x} = ${2*x} ovos.`})}
+ {const n=rnd(2,5);L.push({t:'choice',q:`Leo tem ${n} carrinhos. Bia tem o triplo. Quantos carrinhos Bia tem?`,vis:solto('bola',n),o:nums(3*n,[2*n]),a:0,ex:`Triplo é 3 vezes: ${n} + ${n} + ${n} = ${3*n}.`})}
+ {const n=rnd(3,9);L.push({t:'choice',q:`${2*n} é o dobro de qual número?`,o:nums(n,[2*n]),a:0,ex:`${n} + ${n} = ${2*n}. Então ${2*n} é o dobro de ${n}.`})}
+ return shuf(L)},
+metade:()=>{const L=[];
+ {const n=2*rnd(2,6),k=pick(KS);L.push({t:'reparte',n,p:2,k,q:`Reparta ${n} ${NOME[k]} entre 2 crianças, igualzinho!`})}
+ {const n=3*rnd(2,5),k=pick(KS);L.push({t:'reparte',n,p:3,k,q:`Reparta ${n} ${NOME[k]} entre 3 crianças, igualzinho!`})}
+ for(let i=0;i<2;i++){const n=2*rnd(2,6),k=pick(KS);L.push({t:'choice',q:`Qual é a metade de ${n}?`,vis:solto(k,n),o:nums(n/2,[n*2,n-2]),a:0,ex:`Repartindo ${n} em 2 partes iguais, cada parte fica com ${n/2}.`})}
+ for(let i=0;i<2;i++){const n=3*rnd(2,5),k=pick(KS);L.push({t:'choice',q:`Qual é a terça parte de ${n}?`,vis:solto(k,n),o:nums(n/3,[n/2|0,n*3]),a:0,ex:`Repartindo ${n} em 3 partes iguais, cada parte fica com ${n/3}.`})}
+ L.push({t:'choice',q:'A pizza tem 8 pedaços. Metade é de queijo. Quantos pedaços são de queijo?',o:nums(4,[16,6]),a:0,ex:'A metade de 8 é 4, porque 4 + 4 = 8.'});
+ L.push({t:'choice',q:'Mamãe guardou 12 lápis em 3 estojos, a mesma quantidade em cada. Quantos lápis em cada estojo?',o:nums(4,[6,36]),a:0,ex:'A terça parte de 12 é 4, porque 4 + 4 + 4 = 12.'});
+ return shuf(L)},
+problemas:()=>shuf([
+ {t:'choice',q:'Bia tem 3 caixas com 4 lápis em cada. Qual conta resolve?',o:['3 × 4','3 + 4','4 − 3'],a:0,ex:'São 3 caixas, cada uma com 4: 3 × 4 = 12 lápis.'},
+ {t:'choice',q:'Qual problema combina com a conta 2 × 5?',o:['Tenho 2 mãos com 5 dedos em cada.','Tenho 2 balas e ganhei mais 5.','Tenho 5 bolas e perdi 2.'],a:0,ex:'2 × 5 são 2 grupos com 5 em cada: 2 mãos com 5 dedos.'},
+ {t:'choice',q:'Qual problema combina com a conta 4 × 3?',o:['4 pratinhos com 3 morangos em cada.','4 morangos e mais 3 morangos.','3 morangos para 4 amigos.'],a:0,ex:'4 × 3 são 4 grupos iguais com 3 em cada.'},
+ {t:'choice',q:'Leo tinha 10 figurinhas e deu metade para o irmão. O que ajuda a resolver?',o:['Repartir 10 em 2 partes iguais','Somar 10 + 2','Fazer 10 × 2'],a:0,ex:'Metade é repartir em 2 partes iguais: 10 fica 5 e 5.'},
+ {t:'choice',q:'Na sala há 5 fileiras com 4 carteiras em cada. Qual conta resolve?',o:['5 × 4','5 + 4','5 − 4'],a:0,ex:'5 fileiras de 4: 5 × 4 = 20 carteiras.'},
+ {t:'choice',q:'Ana tem 2 tiaras e 3 laços. Quantos penteados diferentes ela pode fazer usando 1 tiara e 1 laço?',o:nums(6,[5]),a:0,ex:'Cada tiara combina com 3 laços: 2 × 3 = 6.'},
+ {t:'choice',q:'O que falta para resolver? "Tenho 3 sacolas com balas. Quantas balas eu tenho?"',o:['Quantas balas há em cada sacola','A cor das sacolas','O nome da loja'],a:0,ex:'Sem saber quantas balas há em cada sacola, não dá para calcular. Um bom problema traz essa informação!'},
+ {t:'choice',q:'Complete o problema da conta 3 × 5: "Comprei 3 pacotes com ___ biscoitos em cada."',o:['5','3','8'],a:0,ex:'3 × 5: são 3 pacotes com 5 biscoitos em cada, ou seja, 15.'},
+ {t:'choice',q:'Mamãe fez o dobro de 6 cupcakes. Quantos cupcakes ela fez?',o:nums(12,[8]),a:0,ex:'O dobro de 6 é 6 + 6 = 12.'}
+]).slice(0,8)
+};
+const PARADAS={
+ parcelas:{nm:'Parcelas iguais',ds:'Somar números iguais é multiplicar (×2 e ×3)'},
+ fileiras:{nm:'Fileiras e pacotinhos',ds:'×4 e ×5, organização e proporção'},
+ combina:{nm:'Combinações',ds:'Quantos jeitos diferentes de montar?'},
+ dobro:{nm:'Dobro e triplo',ds:'A máquina que multiplica por 2 e por 3'},
+ metade:{nm:'Metade e terça parte',ds:'Repartir em partes iguais'},
+ problemas:{nm:'Detetive dos problemas',ds:'Qual conta resolve? Qual problema combina?'}
+};
+const ORDEM=Object.keys(PARADAS);
+
+const $=s=>document.querySelector(s), app=$('#app');
+const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let best=ls.get('mat-best',{}), somOn=ls.get('mat-som',true), azul=ls.get('mat-azul',false);
+const temVoz='speechSynthesis' in window;
+function falar(t){if(!temVoz||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/×/g,' vezes ').replace(/−/g,' menos ').replace(/_+/g,' quantos '));u.lang='pt-BR';u.rate=.85;speechSynthesis.speak(u)}catch(e){}}
+let ac;function bip(ok,leve){if(!somOn)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const notas=leve?[520]:ok?[660,880]:[240,190];notas.forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(leve?.08:.18,ac.currentTime+i*.12);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+i*.12+.2);o.connect(g).connect(ac.destination);o.start(ac.currentTime+i*.12);o.stop(ac.currentTime+i*.12+.25)})}catch(e){}}
+function aplicaCor(){document.documentElement.classList.toggle('azul',azul);$('#cor').textContent='Cor: '+(azul?'azul':'rosa');$('#som').textContent=somOn?'Som ligado':'Som desligado';$('#som').setAttribute('aria-pressed',somOn)}
+const est=n=>[1,2,3].map(i=>i<=n?'★':'<span class="off">★</span>').join('');
+
+let J=null;
+function mapa(){
+  J=null;
+  const card=(k,nm,ds,cl='')=>`<button class="parada ${cl}" data-act="go" data-k="${k}"><span class="ico">${ICO[k]}</span><span class="nm">${nm}</span><span class="ds">${ds}</span><span class="estrelas" aria-label="${best[k]||0} de 3 estrelas">${est(best[k]||0)}</span></button>`;
+  app.innerHTML=`<div class="trilha">${ORDEM.map(k=>card(k,PARADAS[k].nm,PARADAS[k].ds)).join('')}${card('mista','Gincana final','Desafios misturados de todas as paradas','mista')}</div>
+  <p class="dica-geral">Os números mudam a cada partida, então dá para jogar várias vezes. ${temVoz?'Use o botão "Ouvir" para escutar a pergunta. ':''}As estrelas ficam guardadas neste aparelho.</p>`;
+  window.scrollTo({top:0});
+}
+function comecar(k){
+  const lista=k==='mista'?shuf(ORDEM.flatMap(x=>GER[x]().slice(0,2).map(q=>({...q,de:x})))):GER[k]().map(q=>({...q,de:k}));
+  J={k,lista,i:0,pts:0};pergunta();
+}
+const nomeDe=k=>k==='mista'?'Gincana final':PARADAS[k].nm;
+function pergunta(){
+  const q=J.lista[J.i]; J.feito=false;
+  let corpo='',fala=q.q;
+  if(q.t==='choice'){
+    J.op=shuf(q.o.map((t,i)=>({t,c:i===q.a})));
+    const numerico=q.o.every(x=>/^\d+$/.test(x));
+    corpo=(q.vis||'')+(q.big?`<div class="palavra conta">${q.big}</div>`:'')+`<div class="opts">${J.op.map((o,i)=>`<button class="op ${numerico?'n':''}" data-act="op" data-i="${i}">${o.t}</button>`).join('')}</div>`;
+    fala=q.q+(q.big?' '+q.big:'')+'. '+q.o.join(', ');
+  }else if(q.t==='reparte'){
+    J.rest=q.n; J.rp=Array(q.p).fill(0);
+    corpo=`<div class="sobra"><div class="rot">Para repartir: <b id="nrest">${q.n}</b></div><div class="itens" id="rest"></div></div>
+    <div class="pratos" id="pratos"></div>
+    <div class="linha-acoes"><button class="pill" data-act="rp-zera">Recomeçar</button><button class="conferir" data-act="rp-ck" id="ck" disabled>Conferir</button></div>
+    <p class="dica">Toque em um pratinho para colocar 1 de cada vez.</p>`;
+  }else if(q.t==='combina'){
+    J.sa=null;J.sb=null;J.ach=[];
+    corpo=`<div class="combo"><div class="colc"><h3>${q.na}</h3>${q.A.map((x,i)=>`<button class="peca" data-act="ca" data-i="${i}" aria-pressed="false">${x}</button>`).join('')}</div>
+    <div class="colc"><h3>${q.nb}</h3>${q.B.map((x,i)=>`<button class="peca" data-act="cb" data-i="${i}" aria-pressed="false">${x}</button>`).join('')}</div></div>
+    <p class="msg" id="msg">Já montei: <b id="nach">0</b></p><div class="achados" id="achados"></div>
+    <button class="conferir" data-act="cb-ck" id="ck" disabled>Achei todos!</button>`;
+  }
+  J.fala=fala;
+  app.innerHTML=`<div class="barra"><button class="voltar" data-act="mapa">‹ Trilha</button><div class="prog" role="progressbar" aria-valuenow="${J.i}" aria-valuemax="${J.lista.length}"><i style="width:${J.i/J.lista.length*100}%"></i></div><span class="pts" aria-label="${J.pts} estrelas">★ ${J.pts}</span></div>
+  <div class="cartao"><div class="cab"><span class="tag">${nomeDe(J.k==='mista'?q.de:J.k)} · ${J.i+1} de ${J.lista.length}</span>${temVoz?'<button class="ouvir" data-act="ouvir">Ouvir</button>':''}</div>
+  <h2 class="perg">${q.q}</h2>${corpo}<div class="fb" id="fb"></div></div>`;
+  if(q.t==='reparte')desenhaReparte();
+}
+function desenhaReparte(){
+  const q=J.lista[J.i];
+  $('#rest').innerHTML=ic(q.k,J.rest); $('#nrest').textContent=J.rest;
+  $('#pratos').innerHTML=J.rp.map((c,i)=>`<button class="pratoBtn" data-act="rp" data-i="${i}" aria-label="Pratinho ${i+1}, tem ${c}"><span class="itens">${ic(q.k,c)}</span><span class="cnt">${c}</span></button>`).join('');
+  $('#ck').disabled=J.rest>0;
+}
+const BOM=['Muito bem!','Isso mesmo!','Arrasou!','Você é fera!','Que detetive!'],QUASE=['Quase!','Vamos ver juntos:','Ops, olha só:'];
+const sorteia=a=>a[Math.floor(Math.random()*a.length)];
+function feedback(ok,ex){
+  J.feito=true; if(ok)J.pts++; bip(ok);
+  const fb=$('#fb'); fb.className='fb '+(ok?'ok':'bad');
+  fb.innerHTML=`${MASCOTE}<div><b>${ok?sorteia(BOM):sorteia(QUASE)}</b>${ex||''}</div><button class="prox" data-act="prox">${J.i+1<J.lista.length?'Próxima ›':'Ver estrelas ›'}</button>`;
+  $('.pts').textContent='★ '+J.pts;
+  fb.querySelector('.prox').focus({preventScroll:true}); fb.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+const trava=sel=>document.querySelectorAll(sel).forEach(b=>b.disabled=true);
+function fim(){
+  const n=J.lista.length,p=J.pts/n,e=p>=.9?3:p>=.6?2:1;
+  if(e>(best[J.k]||0)){best[J.k]=e;ls.set('mat-best',best)}
+  const msg=e===3?'Fera da matemática!':e===2?'Muito bom! Falta pouquinho!':'Bom começo! Vamos treinar de novo?';
+  let conf='';if(e>=2){const cs=['var(--p)','var(--p2)','var(--line)','#F7C948','#7A3FB8'];for(let i=0;i<40;i++)conf+=`<i class="confete" style="left:${Math.random()*100}%;background:${cs[i%5]};animation-delay:${Math.random()*.8}s"></i>`}
+  app.innerHTML=`<div class="cartao fim">${conf}<div class="grande" aria-label="${e} de 3 estrelas">${est(e)}</div><h2>${msg}</h2><p>Você acertou ${J.pts} de ${n} na parada ${nomeDe(J.k)}.</p>
+  <div class="acoes"><button class="conferir" style="margin:0" data-act="go" data-k="${J.k}">Jogar de novo</button><button class="pill" data-act="mapa">Voltar à trilha</button></div></div>`;
+  bip(true);
+}
+app.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-act]'); if(!b||b.disabled)return;
+  const act=b.dataset.act,q=J&&J.lista[J.i];
+  if(act==='go')return comecar(b.dataset.k);
+  if(act==='mapa')return mapa();
+  if(act==='ouvir')return falar(J.fala);
+  if(act==='prox'){J.i++;return J.i<J.lista.length?pergunta():fim()}
+  if(J.feito)return;
+  if(act==='op'){
+    const o=J.op[+b.dataset.i]; trava('.op');
+    b.classList.add(o.c?'ok':'bad'); if(!o.c){b.classList.add('shake');document.querySelectorAll('.op')[J.op.findIndex(x=>x.c)].classList.add('ok')}
+    if(q.sai!=null){const s=$('#sai');s.textContent=q.sai;s.classList.add('pronto')}
+    return feedback(o.c,q.ex);
+  }
+  if(act==='rp'){if(J.rest<=0)return;J.rest--;J.rp[+b.dataset.i]++;bip(true,1);return desenhaReparte()}
+  if(act==='rp-zera'){J.rest=q.n;J.rp=J.rp.map(()=>0);return desenhaReparte()}
+  if(act==='rp-ck'){
+    const cada=q.n/q.p,ok=J.rp.every(c=>c===cada); trava('.pratoBtn');trava('[data-act^=rp]');
+    document.querySelectorAll('.pratoBtn').forEach((p,i)=>p.classList.add(J.rp[i]===cada?'ok':'bad'));
+    const parte=q.p===2?'A metade':'A terça parte';
+    return feedback(ok,ok?`Cada criança ficou com ${cada}. ${parte} de ${q.n} é ${cada}.`:`Os pratinhos ficaram diferentes. O certo é ${cada} em cada, porque ${parte.toLowerCase()} de ${q.n} é ${cada}.`);
+  }
+  if(act==='ca'||act==='cb'){
+    const i=+b.dataset.i; if(act==='ca')J.sa=i;else J.sb=i;
+    document.querySelectorAll(`[data-act=${act}]`).forEach((x,j)=>x.setAttribute('aria-pressed',j===i));
+    if(J.sa!=null&&J.sb!=null){
+      const key=J.sa+'-'+J.sb,msg=$('#msg');
+      if(J.ach.includes(key)){msg.innerHTML=`Esse você já montou! Já montei: <b>${J.ach.length}</b>`;bip(false)}
+      else{J.ach.push(key);bip(true,1);$('#achados').insertAdjacentHTML('beforeend',`<span class="achado">${q.A[J.sa]} + ${q.B[J.sb]}</span>`);msg.innerHTML=`Já montei: <b>${J.ach.length}</b>`}
+      J.sa=J.sb=null;document.querySelectorAll('.peca').forEach(x=>x.setAttribute('aria-pressed','false'));
+      $('#ck').disabled=false;
+    }
+    return;
+  }
+  if(act==='cb-ck'){
+    const t=q.A.length*q.B.length,ok=J.ach.length===t; trava('.peca');b.disabled=true;
+    return feedback(ok,(ok?`Você achou todos os ${t}! `:`Você montou ${J.ach.length}, mas dá para montar ${t}. `)+`Cada um dos ${q.A.length} ${q.na} combina com ${q.B.length} ${q.nb}: ${q.A.length} × ${q.B.length} = ${t}.`);
+  }
+});
+$('#cor').addEventListener('click',()=>{azul=!azul;ls.set('mat-azul',azul);aplicaCor()});
+$('#som').addEventListener('click',()=>{somOn=!somOn;ls.set('mat-som',somOn);aplicaCor()});
+const el=document.documentElement,cheiaBtn=$('#cheia'),aviso=$('#aviso');
+const emCheia=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+const pede=el.requestFullscreen||el.webkitRequestFullscreen,sai=document.exitFullscreen||document.webkitExitFullscreen;
+function marcaCheia(){cheiaBtn.textContent=emCheia()?'Sair da tela cheia':'Tela cheia'}
+function avisa(){aviso.hidden=false;aviso.textContent='Este aparelho não deixou abrir em tela cheia aqui. No computador, aperte F11. No celular, baixe o arquivo do jogo e abra no Chrome, ou use "Adicionar à tela de início" no menu do navegador.'}
+cheiaBtn.addEventListener('click',()=>{try{if(emCheia()){sai&&sai.call(document);return}if(!pede){avisa();return}const r=pede.call(el);if(r&&r.catch)r.catch(avisa)}catch(e){avisa()}});
+document.addEventListener('fullscreenchange',marcaCheia);document.addEventListener('webkitfullscreenchange',marcaCheia);
+aplicaCor();mapa();
+}
+</script>
+</body>
+</html>
